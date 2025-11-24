@@ -1,100 +1,118 @@
 const Template = require('../models/Template');
 
-const createTemplate = async (req, res) => {
+// Get all templates for user
+exports.getTemplates = async (req, res) => {
   try {
-    const { name, blocks } = req.body;
-
-    if (!name) {
-      return res.status(400).json({ message: 'Template name is required' });
+    const { favouritesOnly } = req.query;
+    const query = { userId: req.user.id };
+    
+    if (favouritesOnly === 'true') {
+      query.isFavourite = true;
     }
 
-    const template = new Template({
-      userId: req.userId,
-      name,
-      blocks: blocks || []
-    });
+    const templates = await Template.find(query)
+      .sort({ lastModified: -1 })
+      .select('-__v');
 
-    await template.save();
-
-    res.status(201).json({
-      message: 'Template created successfully',
-      template
-    });
+    res.json({ success: true, templates });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
-const getTemplates = async (req, res) => {
-  try {
-    const templates = await Template.find({ userId: req.userId }).sort({ updatedAt: -1 });
-    res.json({ templates });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-const getTemplateById = async (req, res) => {
+// Get single template
+exports.getTemplate = async (req, res) => {
   try {
     const template = await Template.findOne({
       _id: req.params.id,
-      userId: req.userId
+      userId: req.user.id
     });
 
     if (!template) {
-      return res.status(404).json({ message: 'Template not found' });
+      return res.status(404).json({ success: false, message: 'Template not found' });
     }
 
-    res.json({ template });
+    res.json({ success: true, template });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
-const updateTemplate = async (req, res) => {
+// Create template
+exports.createTemplate = async (req, res) => {
   try {
-    const { name, blocks } = req.body;
+    const { name, blocks, globalStyles } = req.body;
+
+    const template = new Template({
+      name,
+      userId: req.user.id,
+      blocks: blocks || [],
+      globalStyles: globalStyles || {}
+    });
+
+    await template.save();
+    res.status(201).json({ success: true, template });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// Update template
+exports.updateTemplate = async (req, res) => {
+  try {
+    const { name, blocks, globalStyles } = req.body;
 
     const template = await Template.findOneAndUpdate(
-      { _id: req.params.id, userId: req.userId },
-      { name, blocks },
-      { new: true }
+      { _id: req.params.id, userId: req.user.id },
+      { name, blocks, globalStyles, lastModified: new Date() },
+      { new: true, runValidators: true }
     );
 
     if (!template) {
-      return res.status(404).json({ message: 'Template not found' });
+      return res.status(404).json({ success: false, message: 'Template not found' });
     }
 
-    res.json({
-      message: 'Template updated successfully',
-      template
-    });
+    res.json({ success: true, template });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
-const deleteTemplate = async (req, res) => {
+// Toggle favourite
+exports.toggleFavourite = async (req, res) => {
   try {
-    const template = await Template.findOneAndDelete({
+    const template = await Template.findOne({
       _id: req.params.id,
-      userId: req.userId
+      userId: req.user.id
     });
 
     if (!template) {
-      return res.status(404).json({ message: 'Template not found' });
+      return res.status(404).json({ success: false, message: 'Template not found' });
     }
 
-    res.json({ message: 'Template deleted successfully' });
+    template.isFavourite = !template.isFavourite;
+    await template.save();
+
+    res.json({ success: true, template });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
-module.exports = {
-  createTemplate,
-  getTemplates,
-  getTemplateById,
-  updateTemplate,
-  deleteTemplate
+// Delete template
+exports.deleteTemplate = async (req, res) => {
+  try {
+    const template = await Template.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.id
+    });
+
+    if (!template) {
+      return res.status(404).json({ success: false, message: 'Template not found' });
+    }
+
+    res.json({ success: true, message: 'Template deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
 };
