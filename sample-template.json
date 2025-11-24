@@ -1,0 +1,65 @@
+{
+  "name": "Welcome Email Template",
+  "blocks": [
+    {
+      "id": "1",
+      "type": "text",
+      "content": "Welcome to Our Platform!",
+      "styles": {
+        "color": "#333333",
+        "fontSize": "32px",
+        "textAlign": "center"
+      }
+    },
+    {
+      "id": "2",
+      "type": "divider",
+      "content": "",
+      "styles": {}
+    },
+    {
+      "id": "3",
+      "type": "image",
+      "content": "",
+      "src": "https://via.placeholder.com/600x200/4CAF50/ffffff?text=Welcome+Banner",
+      "styles": {}
+    },
+    {
+      "id": "4",
+      "type": "text",
+      "content": "Thank you for joining us! We're excited to have you on board. Get started by exploring our features and building amazing email templates.",
+      "styles": {
+        "color": "#666666",
+        "fontSize": "16px",
+        "textAlign": "center"
+      }
+    },
+    {
+      "id": "5",
+      "type": "button",
+      "content": "Get Started",
+      "styles": {
+        "color": "#ffffff",
+        "backgroundColor": "#4CAF50",
+        "fontSize": "18px",
+        "textAlign": "center"
+      }
+    },
+    {
+      "id": "6",
+      "type": "divider",
+      "content": "",
+      "styles": {}
+    },
+    {
+      "id": "7",
+      "type": "text",
+      "content": "Need help? Contact our support team anytime.",
+      "styles": {
+        "color": "#999999",
+        "fontSize": "14px",
+        "textAlign": "center"
+      }
+    }
+  ]
+}
