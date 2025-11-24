@@ -1,126 +1,79 @@
-const ChatMessage = require('../models/ChatMessage');
+const Chat = require('../models/Chat');
 
-/**
- * Get all chat messages for current user
- */
-const getChats = async (req, res) => {
+// Get all chats for user
+exports.getChats = async (req, res) => {
   try {
-    const { limit = 50, skip = 0, favouritesOnly = false } = req.query;
-
-    const query = { userId: req.userId };
+    const { favouritesOnly } = req.query;
+    const query = { userId: req.user.id };
     
     if (favouritesOnly === 'true') {
       query.isFavourite = true;
     }
 
-    const chats = await ChatMessage.find(query)
+    const chats = await Chat.find(query)
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip(parseInt(skip));
+      .select('-__v');
 
-    const total = await ChatMessage.countDocuments(query);
-
-    res.json({
-      chats,
-      total,
-      hasMore: total > parseInt(skip) + chats.length
-    });
+    res.json({ success: true, chats });
   } catch (error) {
-    console.error('Get chats error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
-/**
- * Save a new chat message
- */
-const saveChat = async (req, res) => {
+// Create chat message
+exports.createChat = async (req, res) => {
   try {
     const { role, message, metadata } = req.body;
 
-    if (!role || !message) {
-      return res.status(400).json({ message: 'Role and message are required' });
-    }
-
-    if (!['user', 'assistant', 'system'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role' });
-    }
-
-    const chat = new ChatMessage({
-      userId: req.userId,
+    const chat = new Chat({
+      userId: req.user.id,
       role,
       message,
-      metadata: metadata || {},
-      isFavourite: false
+      metadata
     });
 
     await chat.save();
-
-    res.status(201).json({
-      message: 'Chat saved successfully',
-      chat
-    });
+    res.status(201).json({ success: true, chat });
   } catch (error) {
-    console.error('Save chat error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
-/**
- * Delete a chat message
- */
-const deleteChat = async (req, res) => {
+// Toggle favourite
+exports.toggleFavourite = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const chat = await ChatMessage.findOneAndDelete({
-      _id: id,
-      userId: req.userId
+    const chat = await Chat.findOne({
+      _id: req.params.id,
+      userId: req.user.id
     });
 
     if (!chat) {
-      return res.status(404).json({ message: 'Chat not found' });
-    }
-
-    res.json({ message: 'Chat deleted successfully' });
-  } catch (error) {
-    console.error('Delete chat error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-/**
- * Toggle favourite status of a chat message
- */
-const toggleChatFavourite = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const chat = await ChatMessage.findOne({
-      _id: id,
-      userId: req.userId
-    });
-
-    if (!chat) {
-      return res.status(404).json({ message: 'Chat not found' });
+      return res.status(404).json({ success: false, message: 'Chat not found' });
     }
 
     chat.isFavourite = !chat.isFavourite;
     await chat.save();
 
-    res.json({
-      message: chat.isFavourite ? 'Added to favourites' : 'Removed from favourites',
-      chat
-    });
+    res.json({ success: true, chat });
   } catch (error) {
-    console.error('Toggle chat favourite error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
-module.exports = {
-  getChats,
-  saveChat,
-  deleteChat,
-  toggleChatFavourite
+// Delete chat
+exports.deleteChat = async (req, res) => {
+  try {
+    const chat = await Chat.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.id
+    });
+
+    if (!chat) {
+      return res.status(404).json({ success: false, message: 'Chat not found' });
+    }
+
+    res.json({ success: true, message: 'Chat deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
 };
