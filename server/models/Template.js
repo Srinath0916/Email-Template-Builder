@@ -1,45 +1,63 @@
 const mongoose = require('mongoose');
 
+const blockSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    required: true,
+    enum: ['text', 'image', 'button', 'divider', 'spacer', 'columns']
+  },
+  content: mongoose.Schema.Types.Mixed,
+  styles: {
+    type: Map,
+    of: String,
+    default: {}
+  },
+  order: {
+    type: Number,
+    required: true
+  }
+}, { _id: true });
+
 const templateSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
     index: true
   },
-  name: {
-    type: String,
-    required: true
-  },
-  blocks: [{
-    id: String,
-    type: {
-      type: String,
-      enum: ['text', 'image', 'button', 'divider']
-    },
-    content: String,
-    src: String,
-    styles: {
-      color: String,
-      backgroundColor: String,
-      fontSize: String,
-      textAlign: String
-    }
-  }],
-  thumbnailUrl: {
-    type: String,
-    default: ''
+  blocks: [blockSchema],
+  globalStyles: {
+    backgroundColor: { type: String, default: '#ffffff' },
+    fontFamily: { type: String, default: 'Arial, sans-serif' },
+    maxWidth: { type: String, default: '600px' },
+    padding: { type: String, default: '20px' }
   },
   isFavourite: {
     type: Boolean,
     default: false
+  },
+  thumbnail: String,
+  lastModified: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true
 });
 
-// Indexes for faster queries
-templateSchema.index({ userId: 1, createdAt: -1 });
+// Index for faster queries
 templateSchema.index({ userId: 1, isFavourite: 1 });
+templateSchema.index({ userId: 1, createdAt: -1 });
+
+// Update lastModified on save
+templateSchema.pre('save', function(next) {
+  this.lastModified = new Date();
+  next();
+});
 
 module.exports = mongoose.model('Template', templateSchema);
