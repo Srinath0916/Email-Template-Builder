@@ -6,15 +6,15 @@ import { FiMove, FiTrash2 } from 'react-icons/fi';
 const DraggableCanvasBlock = ({ block, index, moveBlock, deleteBlock, isSelected, onClick }) => {
   const ref = useRef(null);
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag] = useDrag(() => ({
     type: 'CANVAS_BLOCK',
     item: { index },
     collect: (monitor) => ({
       isDragging: monitor.isDragging()
     })
-  });
+  }), [index]);
 
-  const [, drop] = useDrop({
+  const [, drop] = useDrop(() => ({
     accept: 'CANVAS_BLOCK',
     hover: (item, monitor) => {
       if (!ref.current) return;
@@ -33,7 +33,7 @@ const DraggableCanvasBlock = ({ block, index, moveBlock, deleteBlock, isSelected
       moveBlock(dragIndex, hoverIndex);
       item.index = hoverIndex;
     }
-  });
+  }), [index, moveBlock]);
 
   drag(drop(ref));
 

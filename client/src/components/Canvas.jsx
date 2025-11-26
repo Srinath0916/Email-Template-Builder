@@ -6,19 +6,7 @@ import { FiMail } from 'react-icons/fi';
 import DraggableCanvasBlock from './DraggableCanvasBlock';
 
 const Canvas = ({ blocks, setBlocks, selectedBlock, setSelectedBlock }) => {
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: 'BLOCK',
-    drop: (item, monitor) => {
-      if (!monitor.didDrop()) {
-        addBlock(item.type);
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver({ shallow: true })
-    })
-  }));
-
-  const addBlock = (type) => {
+  const addBlock = React.useCallback((type) => {
     const newBlock = {
       id: uuidv4(),
       type,
@@ -31,8 +19,20 @@ const Canvas = ({ blocks, setBlocks, selectedBlock, setSelectedBlock }) => {
         textAlign: 'left'
       }
     };
-    setBlocks([...blocks, newBlock]);
-  };
+    setBlocks(prevBlocks => [...prevBlocks, newBlock]);
+  }, [setBlocks]);
+
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: 'BLOCK',
+    drop: (item, monitor) => {
+      if (!monitor.didDrop()) {
+        addBlock(item.type);
+      }
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true })
+    })
+  }), [addBlock]);
 
   const getDefaultContent = (type) => {
     switch (type) {

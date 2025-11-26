@@ -161,18 +161,9 @@ const Dashboard = () => {
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
               {searchQuery ? 'No templates found' : 'No templates yet'}
             </h3>
-            <p className="text-gray-600 mb-6">
-              {searchQuery ? 'Try a different search term' : 'Create your first email template to get started'}
+            <p className="text-gray-600">
+              {searchQuery ? 'Try a different search term' : 'Use the "Create New Template" button above to get started'}
             </p>
-            {!searchQuery && (
-              <Button
-                variant="primary"
-                icon={<FiPlus />}
-                onClick={() => navigate('/editor')}
-              >
-                Create Your First Template
-              </Button>
-            )}
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
