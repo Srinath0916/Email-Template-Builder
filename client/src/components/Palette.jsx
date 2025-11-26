@@ -12,15 +12,16 @@ const DraggableBlock = ({ type, label, icon: Icon, color }) => {
     })
   });
 
+  console.log(`Block ${type} - isDragging:`, isDragging);
+
   return (
-    <motion.div
+    <div
       ref={drag}
-      whileHover={{ scale: 1.05, y: -2 }}
-      whileTap={{ scale: 0.95 }}
       className={`
-        glass rounded-xl p-4 cursor-move transition-all
+        glass rounded-xl p-4 cursor-move transition-all hover:scale-105 hover:-translate-y-1
         ${isDragging ? 'opacity-50 scale-95' : 'hover:shadow-lg'}
       `}
+      style={{ touchAction: 'none' }}
     >
       <div className="flex items-center gap-3">
         <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center shadow-md`}>
@@ -31,7 +32,7 @@ const DraggableBlock = ({ type, label, icon: Icon, color }) => {
           <p className="text-xs text-gray-500">Drag to add</p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

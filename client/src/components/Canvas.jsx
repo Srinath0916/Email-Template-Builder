@@ -7,6 +7,7 @@ import DraggableCanvasBlock from './DraggableCanvasBlock';
 
 const Canvas = ({ blocks, setBlocks, selectedBlock, setSelectedBlock }) => {
   const addBlock = (type) => {
+    console.log('Adding block:', type);
     const newBlock = {
       id: uuidv4(),
       type,
@@ -22,15 +23,20 @@ const Canvas = ({ blocks, setBlocks, selectedBlock, setSelectedBlock }) => {
     setBlocks([...blocks, newBlock]);
   };
 
-  const [{ isOver }, drop] = useDrop({
+  const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'BLOCK',
     drop: (item) => {
+      console.log('Dropped item:', item);
       addBlock(item.type);
+      return { dropped: true };
     },
     collect: (monitor) => ({
-      isOver: !!monitor.isOver()
+      isOver: !!monitor.isOver(),
+      canDrop: !!monitor.canDrop()
     })
   });
+
+  console.log('Canvas - isOver:', isOver, 'canDrop:', canDrop);
 
   const getDefaultContent = (type) => {
     switch (type) {
