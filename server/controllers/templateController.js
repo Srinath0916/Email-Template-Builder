@@ -43,8 +43,13 @@ exports.createTemplate = async (req, res) => {
   try {
     const { name, blocks, globalStyles } = req.body;
 
+    // Validation
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Template name is required' });
+    }
+
     const template = new Template({
-      name,
+      name: name.trim(),
       userId: req.userId,
       blocks: blocks || [],
       globalStyles: globalStyles || {}
@@ -53,6 +58,7 @@ exports.createTemplate = async (req, res) => {
     await template.save();
     res.status(201).json({ success: true, template });
   } catch (error) {
+    console.error('Create template error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
