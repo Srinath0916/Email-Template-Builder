@@ -19,7 +19,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = React.useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get('/api/templates', {
@@ -31,11 +31,11 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchTemplates();
-  }, [token]);
+  }, [fetchTemplates]);
 
   // Refetch templates when user returns to dashboard
   useEffect(() => {
@@ -45,7 +45,7 @@ const Dashboard = () => {
     
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [token]);
+  }, [fetchTemplates]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this template?')) return;

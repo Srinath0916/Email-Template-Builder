@@ -26,18 +26,7 @@ const Editor = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      loadTemplate();
-    } else {
-      // Reset state when creating new template
-      setTemplateName('Untitled Template');
-      setBlocks([]);
-      setSelectedBlock(null);
-    }
-  }, [id]);
-
-  const loadTemplate = async () => {
+  const loadTemplate = React.useCallback(async () => {
     try {
       const response = await axios.get(`/api/templates/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -49,7 +38,20 @@ const Editor = () => {
       toast.error('Failed to load template');
       navigate('/dashboard');
     }
-  };
+  }, [id, token, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      loadTemplate();
+    } else {
+      // Reset state when creating new template
+      setTemplateName('Untitled Template');
+      setBlocks([]);
+      setSelectedBlock(null);
+    }
+  }, [id, loadTemplate]);
+
+
 
   const handleSave = async () => {
     if (!templateName.trim()) {
