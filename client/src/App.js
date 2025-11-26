@@ -1,13 +1,46 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { AuthProvider } from './context/AuthContext';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+import Editor from './pages/Editor';
+import Receivers from './pages/Receivers';
+import Favourites from './pages/Favourites';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-      <div className="text-center text-white">
-        <h1 className="text-5xl font-bold mb-4">Email Template Builder</h1>
-        <p className="text-xl">Coming Soon...</p>
-      </div>
-    </div>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/home" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/editor" element={<Editor />} />
+            <Route path="/editor/:id" element={<Editor />} />
+            <Route path="/receivers" element={<Receivers />} />
+            <Route path="/favourites" element={<Favourites />} />
+          </Routes>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

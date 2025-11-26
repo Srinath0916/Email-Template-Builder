@@ -11,6 +11,7 @@ import Palette from '../components/Palette';
 import Canvas from '../components/Canvas';
 import BlockEditor from '../components/BlockEditor';
 import ShareModal from '../components/modals/ShareModal';
+import SendTemplateModal from '../components/modals/SendTemplateModal';
 import { exportToHTML } from '../utils/htmlExport';
 
 const Editor = () => {
@@ -23,6 +24,7 @@ const Editor = () => {
   const [saving, setSaving] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -88,6 +90,7 @@ const Editor = () => {
           onSave={handleSave}
           onExport={handleExport}
           onShare={() => setShowShareModal(true)}
+          onSend={id ? () => setShowSendModal(true) : null}
           saving={saving}
         />
 
@@ -186,6 +189,16 @@ const Editor = () => {
           onClose={() => setShowShareModal(false)}
           templateId={id}
           templateName={templateName}
+        />
+      )}
+
+      {/* Send Template Modal */}
+      {id && (
+        <SendTemplateModal
+          isOpen={showSendModal}
+          onClose={() => setShowSendModal(false)}
+          templateId={id}
+          token={token}
         />
       )}
     </DndProvider>

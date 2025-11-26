@@ -31,6 +31,17 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const signup = async (name, email, password) => {
+    try {
+      const response = await axios.post('/api/auth/signup', { name, email, password });
+      setUser(response.data.user);
+      setAccessToken(response.data.accessToken);
+      return { success: true, user: response.data.user };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Signup failed' };
+    }
+  };
+
   const login = async (email, password) => {
     try {
       const response = await axios.post('/api/auth/login', { email, password });
@@ -59,6 +70,7 @@ export const AuthProvider = ({ children }) => {
     accessToken,
     token: accessToken,
     isAuthenticated: !!user,
+    signup,
     login,
     logout,
     refreshAccessToken

@@ -2,9 +2,10 @@ const express = require('express');
 const {
   createTemplate,
   getTemplates,
-  getTemplateById,
+  getTemplate,
   updateTemplate,
-  deleteTemplate
+  deleteTemplate,
+  toggleFavourite
 } = require('../controllers/templateController');
 const { verifyToken } = require('../middleware/auth');
 
@@ -14,8 +15,9 @@ router.use(verifyToken);
 
 router.post('/', createTemplate);
 router.get('/', getTemplates);
-router.get('/:id', getTemplateById);
+router.get('/:id', getTemplate);
 router.put('/:id', updateTemplate);
+router.patch('/:id/favourite', toggleFavourite);
 router.delete('/:id', deleteTemplate);
 
 module.exports = router;

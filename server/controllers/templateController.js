@@ -4,7 +4,7 @@ const Template = require('../models/Template');
 exports.getTemplates = async (req, res) => {
   try {
     const { favouritesOnly } = req.query;
-    const query = { userId: req.user.id };
+    const query = { userId: req.userId };
     
     if (favouritesOnly === 'true') {
       query.isFavourite = true;
@@ -25,7 +25,7 @@ exports.getTemplate = async (req, res) => {
   try {
     const template = await Template.findOne({
       _id: req.params.id,
-      userId: req.user.id
+      userId: req.userId
     });
 
     if (!template) {
@@ -45,7 +45,7 @@ exports.createTemplate = async (req, res) => {
 
     const template = new Template({
       name,
-      userId: req.user.id,
+      userId: req.userId,
       blocks: blocks || [],
       globalStyles: globalStyles || {}
     });
@@ -63,7 +63,7 @@ exports.updateTemplate = async (req, res) => {
     const { name, blocks, globalStyles } = req.body;
 
     const template = await Template.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.id },
+      { _id: req.params.id, userId: req.userId },
       { name, blocks, globalStyles, lastModified: new Date() },
       { new: true, runValidators: true }
     );
@@ -83,7 +83,7 @@ exports.toggleFavourite = async (req, res) => {
   try {
     const template = await Template.findOne({
       _id: req.params.id,
-      userId: req.user.id
+      userId: req.userId
     });
 
     if (!template) {
@@ -104,7 +104,7 @@ exports.deleteTemplate = async (req, res) => {
   try {
     const template = await Template.findOneAndDelete({
       _id: req.params.id,
-      userId: req.user.id
+      userId: req.userId
     });
 
     if (!template) {

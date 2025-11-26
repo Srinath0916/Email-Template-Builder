@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FiMail, FiLogOut, FiKey, FiMessageSquare, FiHeart, FiHome } from 'react-icons/fi';
+import { FiMail, FiLogOut, FiKey, FiInbox, FiHeart, FiHome } from 'react-icons/fi';
 import Button from './Button';
 import ForgotPasswordModal from '../modals/ForgotPasswordModal';
 
-const Navbar = ({ showActions = false, onSave, onExport, onShare, saving = false }) => {
+const Navbar = ({ showActions = false, onSave, onExport, onShare, onSend, saving = false }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -52,11 +52,11 @@ const Navbar = ({ showActions = false, onSave, onExport, onShare, saving = false
                 <span>Home</span>
               </button>
               <button
-                onClick={() => navigate('/chats')}
+                onClick={() => navigate('/receivers')}
                 className="px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-700"
               >
-                <FiMessageSquare size={18} />
-                <span>Chats</span>
+                <FiInbox size={18} />
+                <span>Receivers</span>
               </button>
               <button
                 onClick={() => navigate('/favourites')}
@@ -79,6 +79,15 @@ const Navbar = ({ showActions = false, onSave, onExport, onShare, saving = false
                   >
                     Save
                   </Button>
+                  {onSend && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={onSend}
+                    >
+                      Send
+                    </Button>
+                  )}
                   {onShare && (
                     <Button
                       variant="ghost"

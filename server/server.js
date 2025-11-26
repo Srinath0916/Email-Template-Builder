@@ -23,6 +23,15 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+// Routes
+const authRoutes = require('./routes/authRoutes');
+const templateRoutes = require('./routes/templateRoutes');
+const receiverRoutes = require('./routes/receiverRoutes');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/templates', templateRoutes);
+app.use('/api', receiverRoutes);
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
