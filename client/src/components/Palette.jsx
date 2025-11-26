@@ -4,13 +4,13 @@ import { motion } from 'framer-motion';
 import { FiType, FiImage, FiSquare, FiMinus } from 'react-icons/fi';
 
 const DraggableBlock = ({ type, label, icon: Icon, color }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
+  const [{ isDragging }, drag] = useDrag({
     type: 'BLOCK',
     item: { type },
     collect: (monitor) => ({
-      isDragging: monitor.isDragging()
+      isDragging: !!monitor.isDragging()
     })
-  }));
+  });
 
   return (
     <motion.div
