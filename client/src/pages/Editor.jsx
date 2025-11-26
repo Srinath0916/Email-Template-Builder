@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -10,21 +10,21 @@ import Navbar from '../components/ui/Navbar';
 import Palette from '../components/Palette';
 import Canvas from '../components/Canvas';
 import BlockEditor from '../components/BlockEditor';
-import ShareModal from '../components/modals/ShareModal';
 import SendTemplateModal from '../components/modals/SendTemplateModal';
 import { exportToHTML } from '../utils/htmlExport';
 
 const Editor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { token } = useAuth();
-  const [templateName, setTemplateName] = useState('Untitled Template');
+  const [templateName, setTemplateName] = useState(location.state?.templateName || 'Untitled Template');
   const [blocks, setBlocks] = useState([]);
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [saving, setSaving] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
+  const [isFavourite, setIsFavourite] = useState(false);
 
   const loadTemplate = React.useCallback(async () => {
     try {
@@ -33,6 +33,7 @@ const Editor = () => {
       });
       setTemplateName(response.data.template.name);
       setBlocks(response.data.template.blocks || []);
+      setIsFavourite(response.data.template.isFavourite || false);
       toast.success('Template loaded successfully');
     } catch (err) {
       toast.error('Failed to load template');
@@ -45,11 +46,29 @@ const Editor = () => {
       loadTemplate();
     } else {
       // Reset state when creating new template
-      setTemplateName('Untitled Template');
+      setTemplateName(location.state?.templateName || 'Untitled Template');
       setBlocks([]);
       setSelectedBlock(null);
+      setIsFavourite(false);
     }
-  }, [id, loadTemplate]);
+  }, [id, loadTemplate, location.state?.templateName]);
+
+  const handleToggleFavourite = async () => {
+    if (!id) {
+      toast.error('Please save the template first');
+      return;
+    }
+
+    try {
+      await axios.patch(`/api/templates/${id}/favourite`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setIsFavourite(!isFavourite);
+      toast.success(isFavourite ? 'Removed from favourites' : 'Added to favourites ❤️');
+    } catch (err) {
+      toast.error('Failed to update favourite');
+    }
+  };
 
 
 
@@ -105,8 +124,9 @@ const Editor = () => {
           showActions={true}
           onSave={handleSave}
           onExport={handleExport}
-          onShare={() => setShowShareModal(true)}
           onSend={id ? () => setShowSendModal(true) : null}
+          onToggleFavourite={handleToggleFavourite}
+          isFavourite={isFavourite}
           saving={saving}
         />
 
@@ -197,16 +217,6 @@ const Editor = () => {
           </div>
         </div>
       </div>
-
-      {/* Share Modal */}
-      {id && (
-        <ShareModal
-          isOpen={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          templateId={id}
-          templateName={templateName}
-        />
-      )}
 
       {/* Send Template Modal */}
       {id && (

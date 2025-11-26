@@ -1,22 +1,17 @@
 const mongoose = require('mongoose');
 
 const blockSchema = new mongoose.Schema({
+  id: String,
   type: {
     type: String,
     required: true,
     enum: ['text', 'image', 'button', 'divider', 'spacer', 'columns']
   },
   content: mongoose.Schema.Types.Mixed,
-  styles: {
-    type: Map,
-    of: String,
-    default: {}
-  },
-  order: {
-    type: Number,
-    required: true
-  }
-}, { _id: true });
+  src: String,
+  styles: mongoose.Schema.Types.Mixed,
+  order: Number
+}, { _id: false, strict: false });
 
 const templateSchema = new mongoose.Schema({
   name: {

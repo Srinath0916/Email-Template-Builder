@@ -5,17 +5,19 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { 
   FiPlus, FiEdit2, FiTrash2, FiSearch, FiMail, 
-  FiCalendar, FiLayers, FiTrendingUp 
+  FiCalendar, FiLayers, FiTrendingUp, FiHeart 
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import Navbar from '../components/ui/Navbar';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import CreateTemplateModal from '../components/modals/CreateTemplateModal';
 
 const Dashboard = () => {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const navigate = useNavigate();
   const { user, token } = useAuth();
 
@@ -60,6 +62,28 @@ const Dashboard = () => {
     } catch (err) {
       toast.error('Failed to delete template');
     }
+  };
+
+  const handleToggleFavourite = async (id, currentStatus) => {
+    try {
+      await axios.patch(`/api/templates/${id}/favourite`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state immediately for better UX
+      setTemplates(templates.map(t => 
+        t._id === id ? { ...t, isFavourite: !currentStatus } : t
+      ));
+      
+      toast.success(currentStatus ? 'Removed from favourites' : 'Added to favourites ❤️');
+    } catch (err) {
+      toast.error('Failed to update favourite');
+    }
+  };
+
+  const handleCreateTemplate = (templateName) => {
+    setShowCreateModal(false);
+    navigate('/editor', { state: { templateName } });
   };
 
   const filteredTemplates = templates.filter(t =>
@@ -131,7 +155,7 @@ const Dashboard = () => {
             variant="primary"
             size="lg"
             icon={<FiPlus size={20} />}
-            onClick={() => navigate('/editor')}
+            onClick={() => setShowCreateModal(true)}
             className="md:w-auto"
           >
             Create New Template
@@ -194,6 +218,20 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => handleToggleFavourite(template._id, template.isFavourite)}
+                      className={`p-2 rounded-lg transition-all ${
+                        template.isFavourite 
+                          ? 'bg-red-50 text-red-500 hover:bg-red-100' 
+                          : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-red-500'
+                      }`}
+                      title={template.isFavourite ? 'Remove from favourites' : 'Add to favourites'}
+                    >
+                      <FiHeart 
+                        size={18} 
+                        fill={template.isFavourite ? 'currentColor' : 'none'}
+                      />
+                    </button>
                     <Button
                       variant="secondary"
                       size="sm"
@@ -218,6 +256,13 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Create Template Modal */}
+      <CreateTemplateModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onConfirm={handleCreateTemplate}
+      />
     </div>
   );
 };
