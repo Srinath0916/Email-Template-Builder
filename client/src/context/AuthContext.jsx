@@ -1,5 +1,10 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
+
+// Configure axios defaults
+axios.defaults.baseURL = API_URL;
+axios.defaults.withCredentials = true;
 
 const AuthContext = createContext();
 
@@ -15,8 +20,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // Start with loading true
   const [accessToken, setAccessToken] = useState(null);
-
-  axios.defaults.withCredentials = true;
 
   // Check for existing session on mount
   useEffect(() => {
