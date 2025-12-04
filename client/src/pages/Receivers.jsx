@@ -17,6 +17,7 @@ const Receivers = () => {
 
   useEffect(() => {
     fetchReceivedTemplates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchReceivedTemplates = async () => {

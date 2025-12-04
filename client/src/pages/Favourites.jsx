@@ -18,6 +18,7 @@ const Favourites = () => {
 
   useEffect(() => {
     fetchFavourites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchFavourites = async () => {
