@@ -4,12 +4,13 @@ const blockSchema = new mongoose.Schema({
   id: String,
   type: {
     type: String,
-    required: true,
-    enum: ['text', 'image', 'button', 'divider', 'spacer', 'columns']
+    required: true
   },
   content: mongoose.Schema.Types.Mixed,
   src: String,
+  url: String,
   styles: mongoose.Schema.Types.Mixed,
+  childButton: mongoose.Schema.Types.Mixed,
   order: Number
 }, { _id: false, strict: false });
 

@@ -1,6 +1,5 @@
 const Favourite = require('../models/Favourite');
 const Template = require('../models/Template');
-const ChatMessage = require('../models/ChatMessage');
 
 /**
  * Get all favourites for current user
@@ -45,8 +44,6 @@ const toggleFavourite = async (req, res) => {
     let item;
     if (itemType === 'template') {
       item = await Template.findOne({ _id: itemId, userId: req.userId });
-    } else {
-      item = await ChatMessage.findOne({ _id: itemId, userId: req.userId });
     }
 
     if (!item) {
@@ -118,8 +115,6 @@ const removeFavourite = async (req, res) => {
     let item;
     if (favourite.itemType === 'template') {
       item = await Template.findById(favourite.itemId);
-    } else {
-      item = await ChatMessage.findById(favourite.itemId);
     }
 
     if (item) {

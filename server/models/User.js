@@ -6,8 +6,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     lowercase: true,
-    trim: true,
-    index: true
+    trim: true
   },
   passwordHash: {
     type: String,
@@ -24,15 +23,14 @@ const userSchema = new mongoose.Schema({
     ip: String,
     userAgent: String
   }],
-  otp: {
-    codeHash: String,
+  resetPasswordOTP: {
+    code: String,
     expiresAt: Date
   }
 }, {
   timestamps: true
 });
 
-// Index for faster queries
-userSchema.index({ email: 1 });
+
 
 module.exports = mongoose.model('User', userSchema);

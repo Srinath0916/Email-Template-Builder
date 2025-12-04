@@ -1,6 +1,22 @@
+// Helper to generate button HTML
+const generateButtonHTML = (button) => {
+  if (!button) return '';
+  const { content, url, styles } = button;
+  return `
+    <table border="0" cellpadding="0" cellspacing="0" style="margin: 15px auto 0;">
+      <tr>
+        <td style="background-color: ${styles.backgroundColor}; padding: 12px 24px; border-radius: 4px;">
+          <a href="${url || '#'}" target="_blank" style="color: ${styles.color}; text-decoration: none; font-size: ${styles.fontSize}; font-weight: bold;">
+            ${content}
+          </a>
+        </td>
+      </tr>
+    </table>`;
+};
+
 export const exportToHTML = (blocks) => {
   const blockHTML = blocks.map(block => {
-    const { type, content, src, styles } = block;
+    const { type, content, src, styles, childButton } = block;
 
     switch (type) {
       case 'text':
@@ -8,14 +24,16 @@ export const exportToHTML = (blocks) => {
           <tr>
             <td style="padding: 10px; color: ${styles.color}; font-size: ${styles.fontSize}; text-align: ${styles.textAlign};">
               ${content}
+              ${childButton ? generateButtonHTML(childButton) : ''}
             </td>
           </tr>`;
       
       case 'image':
         return `
           <tr>
-            <td style="padding: 10px;">
-              <img src="${src}" alt="Email Image" style="max-width: 100%; height: auto; display: block;" />
+            <td style="padding: 10px; text-align: center;">
+              <img src="${src}" alt="Email Image" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
+              ${childButton ? generateButtonHTML(childButton) : ''}
             </td>
           </tr>`;
       
@@ -23,10 +41,10 @@ export const exportToHTML = (blocks) => {
         return `
           <tr>
             <td style="padding: 10px; text-align: ${styles.textAlign};">
-              <table border="0" cellpadding="0" cellspacing="0">
+              <table border="0" cellpadding="0" cellspacing="0" ${styles.textAlign === 'center' ? 'style="margin: 0 auto;"' : ''}>
                 <tr>
                   <td style="background-color: ${styles.backgroundColor}; padding: 12px 24px; border-radius: 4px;">
-                    <a href="#" style="color: ${styles.color}; text-decoration: none; font-size: ${styles.fontSize}; font-weight: bold;">
+                    <a href="${block.url || '#'}" target="_blank" style="color: ${styles.color}; text-decoration: none; font-size: ${styles.fontSize}; font-weight: bold;">
                       ${content}
                     </a>
                   </td>

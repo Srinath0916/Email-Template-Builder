@@ -3,16 +3,15 @@ const {
   signup, 
   login, 
   refresh, 
-  logout, 
-  forgotPassword, 
-  verifyOTP, 
-  resetPassword,
-  getMe
+  logout,
+  getMe,
+  requestPasswordReset,
+  resetPasswordWithOTP,
+  changePassword
 } = require('../controllers/authController');
 const { verifyToken } = require('../middleware/auth');
 const { 
   authLimiter, 
-  forgotPasswordLimiter, 
   refreshLimiter 
 } = require('../middleware/rateLimiter');
 
@@ -23,11 +22,13 @@ router.post('/signup', authLimiter, signup);
 router.post('/login', authLimiter, login);
 router.post('/refresh', refreshLimiter, refresh);
 router.post('/logout', logout);
-router.post('/forgot-password', forgotPasswordLimiter, forgotPassword);
-router.post('/verify-otp', authLimiter, verifyOTP);
-router.post('/reset-password', authLimiter, resetPassword);
+
+// Password reset routes
+router.post('/forgot-password', authLimiter, requestPasswordReset);
+router.post('/reset-password', authLimiter, resetPasswordWithOTP);
 
 // Protected routes
 router.get('/me', verifyToken, getMe);
+router.post('/change-password', verifyToken, changePassword);
 
 module.exports = router;

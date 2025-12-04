@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { FiMail, FiLock, FiUser, FiArrowRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
@@ -33,62 +32,44 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-accent-500 via-primary-500 to-accent-600">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, -90, 0],
-          }}
-          transition={{ duration: 20, repeat: Infinity }}
-          className="absolute -top-1/2 -right-1/2 w-full h-full bg-white/5 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1.2, 1, 1.2],
-            rotate: [-90, 0, -90],
-          }}
-          transition={{ duration: 20, repeat: Infinity }}
-          className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-white/5 rounded-full blur-3xl"
-        />
-      </div>
-
-      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center relative z-10">
-        {/* Left Side - Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Card glass className="p-8 md:p-10">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2 font-display">
-                Create Account
-              </h2>
-              <p className="text-gray-600">
-                Start building beautiful email templates today
-              </p>
+    <div className="min-h-screen flex">
+      {/* Left Side - Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-gray-50">
+        <div className="w-full max-w-md">
+          <div className="mb-8">
+            <div className="lg:hidden mb-6">
+              <div className="inline-flex items-center gap-2 text-primary-600 mb-4">
+                <FiMail size={24} />
+                <span className="font-semibold text-xl">Email Template Builder</span>
+              </div>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2 font-display">
+              Create your account
+            </h2>
+            <p className="text-gray-600">
+              Start building professional email templates today
+            </p>
+          </div>
+          
+          <Card className="p-8 shadow-lg">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <Input
                 label="Full Name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="John Doe"
-                icon={<FiUser size={20} />}
+                icon={<FiUser size={18} />}
                 required
               />
 
               <Input
-                label="Email Address"
+                label="Email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                icon={<FiMail size={20} />}
+                icon={<FiMail size={18} />}
                 required
               />
 
@@ -97,79 +78,93 @@ const Signup = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                icon={<FiLock size={20} />}
+                placeholder="At least 6 characters"
+                icon={<FiLock size={18} />}
                 required
                 minLength="6"
               />
 
               <Button
                 type="submit"
-                variant="accent"
-                size="lg"
+                variant="primary"
                 className="w-full"
                 loading={loading}
-                icon={<FiArrowRight />}
+                icon={<FiArrowRight size={16} />}
               >
                 Create Account
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-gray-600">
+              <p className="text-sm text-gray-600">
                 Already have an account?{' '}
                 <Link
                   to="/login"
-                  className="text-accent-600 hover:text-accent-700 font-semibold transition-colors"
+                  className="text-primary-600 hover:text-primary-700 font-semibold"
                 >
                   Sign in
                 </Link>
               </p>
             </div>
           </Card>
-        </motion.div>
-
-        {/* Right Side - Branding */}
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="hidden md:block text-white"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
-            className="w-20 h-20 bg-white/20 backdrop-blur-lg rounded-2xl flex items-center justify-center mb-6 shadow-2xl"
-          >
-            <FiMail size={40} />
-          </motion.div>
-          <h1 className="text-5xl font-bold mb-4 font-display">
-            Join EmailBuilder Pro
-          </h1>
-          <p className="text-xl text-white/80 mb-8">
-            Create professional email templates in minutes, not hours
+          
+          <p className="text-center text-xs text-gray-500 mt-6">
+            By creating an account, you agree to our Terms and Privacy Policy
           </p>
-          <div className="space-y-4">
-            {[
-              'No coding required',
-              'Unlimited templates',
-              'Export ready-to-use HTML',
-              'Save & manage templates'
-            ].map((feature, i) => (
-              <motion.div
-                key={feature}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + i * 0.1 }}
-                className="flex items-center gap-3"
-              >
-                <div className="w-2 h-2 bg-white rounded-full" />
-                <span className="text-white/90">{feature}</span>
-              </motion.div>
-            ))}
+        </div>
+      </div>
+
+      {/* Right Side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 gradient-bg relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-600/95 to-purple-700/95"></div>
+        <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 text-white">
+          <div className="mb-10">
+            <h1 className="text-5xl xl:text-6xl font-bold font-display mb-6 leading-tight drop-shadow-sm">
+              Start Building<br />Today
+            </h1>
+            <p className="text-xl text-white mb-8 max-w-md leading-relaxed">
+              Create, customize, and share beautiful email templates in minutes with our intuitive builder.
+            </p>
           </div>
-        </motion.div>
+          
+          <div className="space-y-5 max-w-md">
+            <div className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/30">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-md">
+                  <span className="text-2xl">🎨</span>
+                </div>
+                <h3 className="text-lg font-bold">Visual Editor</h3>
+              </div>
+              <p className="text-white/95 text-sm leading-relaxed">
+                Design emails visually without writing any code
+              </p>
+            </div>
+            
+            <div className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/30">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-md">
+                  <span className="text-2xl">⚡</span>
+                </div>
+                <h3 className="text-lg font-bold">Export Instantly</h3>
+              </div>
+              <p className="text-white/95 text-sm leading-relaxed">
+                Download production-ready HTML with one click
+              </p>
+            </div>
+            
+            <div className="bg-white/15 backdrop-blur-md rounded-xl p-5 border border-white/30">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-md">
+                  <span className="text-2xl">🤝</span>
+                </div>
+                <h3 className="text-lg font-bold">Share & Collaborate</h3>
+              </div>
+              <p className="text-white/95 text-sm leading-relaxed">
+                Send templates to teammates and work together
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

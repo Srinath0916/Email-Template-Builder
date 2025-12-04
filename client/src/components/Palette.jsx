@@ -1,9 +1,7 @@
-import React from 'react';
 import { useDrag } from 'react-dnd';
-import { motion } from 'framer-motion';
 import { FiType, FiImage, FiSquare, FiMinus } from 'react-icons/fi';
 
-const DraggableBlock = ({ type, label, icon: Icon, color }) => {
+const DraggableBlock = ({ type, label, icon: Icon, color, description }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'BLOCK',
     item: { type },
@@ -12,24 +10,22 @@ const DraggableBlock = ({ type, label, icon: Icon, color }) => {
     })
   });
 
-  console.log(`Block ${type} - isDragging:`, isDragging);
-
   return (
     <div
       ref={drag}
       className={`
-        glass rounded-xl p-4 cursor-move transition-all hover:scale-105 hover:-translate-y-1
-        ${isDragging ? 'opacity-50 scale-95' : 'hover:shadow-lg'}
+        bg-white border-2 border-gray-200 rounded-lg p-3 cursor-move transition-all hover:border-primary-300 hover:shadow-md
+        ${isDragging ? 'opacity-50 scale-95' : ''}
       `}
       style={{ touchAction: 'none' }}
     >
       <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center shadow-md`}>
-          <Icon className="text-white" size={20} />
+        <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center`}>
+          <Icon size={18} />
         </div>
         <div>
-          <p className="font-semibold text-gray-900">{label}</p>
-          <p className="text-xs text-gray-500">Drag to add</p>
+          <p className="text-sm font-semibold text-gray-900">{label}</p>
+          {description && <p className="text-xs text-gray-500">{description}</p>}
         </div>
       </div>
     </div>
@@ -38,39 +34,28 @@ const DraggableBlock = ({ type, label, icon: Icon, color }) => {
 
 const Palette = () => {
   const blocks = [
-    { type: 'text', label: 'Text', icon: FiType, color: 'from-blue-500 to-cyan-500' },
-    { type: 'image', label: 'Image', icon: FiImage, color: 'from-purple-500 to-pink-500' },
-    { type: 'button', label: 'Button', icon: FiSquare, color: 'from-orange-500 to-red-500' },
-    { type: 'divider', label: 'Divider', icon: FiMinus, color: 'from-green-500 to-teal-500' }
+    { type: 'text', label: 'Text', icon: FiType, color: 'bg-blue-100 text-blue-600', description: 'Can contain button' },
+    { type: 'image', label: 'Image', icon: FiImage, color: 'bg-purple-100 text-purple-600', description: 'Can contain button' },
+    { type: 'button', label: 'Button', icon: FiSquare, color: 'bg-orange-100 text-orange-600', description: 'Drop inside blocks' },
+    { type: 'divider', label: 'Divider', icon: FiMinus, color: 'bg-green-100 text-green-600' }
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="glass rounded-xl p-6 sticky top-24"
-    >
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-1 font-display">
+    <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-24 shadow-sm">
+      <div className="mb-5">
+        <h3 className="text-base font-semibold text-gray-900 mb-1">
           Building Blocks
         </h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-xs text-gray-500">
           Drag blocks to canvas
         </p>
       </div>
       <div className="space-y-3">
-        {blocks.map((block, index) => (
-          <motion.div
-            key={block.type}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <DraggableBlock {...block} />
-          </motion.div>
+        {blocks.map((block) => (
+          <DraggableBlock key={block.type} {...block} />
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

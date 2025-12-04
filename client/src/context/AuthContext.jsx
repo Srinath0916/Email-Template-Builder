@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -13,13 +13,29 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading true
   const [accessToken, setAccessToken] = useState(null);
 
   axios.defaults.withCredentials = true;
 
+  // Check for existing session on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await axios.post('/api/auth/refresh');
+        setAccessToken(response.data.accessToken);
+        setUser(response.data.user);
+      } catch {
+        // No valid session, user stays null
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
   // Add axios interceptor to automatically add token to requests
-  React.useEffect(() => {
+  useEffect(() => {
     const requestInterceptor = axios.interceptors.request.use(
       (config) => {
         if (accessToken) {
@@ -63,18 +79,7 @@ export const AuthProvider = ({ children }) => {
     };
   }, [accessToken]);
 
-  const refreshAccessToken = useCallback(async () => {
-    try {
-      const response = await axios.post('/api/auth/refresh');
-      setAccessToken(response.data.accessToken);
-      return response.data.accessToken;
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      setUser(null);
-      setAccessToken(null);
-      return null;
-    }
-  }, []);
+
 
   const signup = async (name, email, password) => {
     try {
@@ -93,13 +98,10 @@ export const AuthProvider = ({ children }) => {
       const userData = response.data.user;
       const token = response.data.accessToken;
       
-      console.log('Login successful, token:', token ? 'exists' : 'missing');
-      
       setUser(userData);
       setAccessToken(token);
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Login error:', error);
       return { success: false, message: error.response?.data?.message || 'Login failed' };
     }
   };
@@ -107,8 +109,8 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await axios.post('/api/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch {
+      // Logout error - continue with local cleanup
     } finally {
       setUser(null);
       setAccessToken(null);
@@ -123,8 +125,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
     signup,
     login,
-    logout,
-    refreshAccessToken
+    logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

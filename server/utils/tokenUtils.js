@@ -4,7 +4,6 @@ const crypto = require('crypto');
 // Token expiry values (production-grade)
 const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
-const OTP_EXPIRY = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 /**
  * Generate access token (short-lived)
@@ -58,29 +57,17 @@ const hashToken = (token) => {
 };
 
 /**
- * Generate OTP (6-digit numeric code)
- */
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
-/**
- * Hash OTP for storage
- */
-const hashOTP = (otp) => {
-  return crypto.createHash('sha256').update(otp).digest('hex');
-};
-
-/**
  * Cookie options for refresh token (httpOnly, secure, sameSite)
  */
 const getRefreshTokenCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
   return {
     httpOnly: true, // Cannot be accessed by JavaScript
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-    sameSite: 'lax', // CSRF protection
+    secure: isProduction, // HTTPS only in production
+    sameSite: isProduction ? 'strict' : 'lax', // CSRF protection
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    path: '/' // Available for all routes
+    path: '/', // Available for all routes
+    domain: isProduction ? process.env.COOKIE_DOMAIN : undefined
   };
 };
 
@@ -88,12 +75,14 @@ const getRefreshTokenCookieOptions = () => {
  * Cookie options for access token (optional - can also be sent in response body)
  */
 const getAccessTokenCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
     maxAge: 15 * 60 * 1000, // 15 minutes
-    path: '/'
+    path: '/',
+    domain: isProduction ? process.env.COOKIE_DOMAIN : undefined
   };
 };
 
@@ -103,11 +92,8 @@ module.exports = {
   verifyAccessToken,
   verifyRefreshToken,
   hashToken,
-  generateOTP,
-  hashOTP,
   getRefreshTokenCookieOptions,
   getAccessTokenCookieOptions,
   ACCESS_TOKEN_EXPIRY,
-  REFRESH_TOKEN_EXPIRY,
-  OTP_EXPIRY
+  REFRESH_TOKEN_EXPIRY
 };

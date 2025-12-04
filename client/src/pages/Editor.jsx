@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAuth } from '../context/AuthContext';
@@ -13,11 +12,32 @@ import BlockEditor from '../components/BlockEditor';
 import SendTemplateModal from '../components/modals/SendTemplateModal';
 import { exportToHTML } from '../utils/htmlExport';
 
+// Helper to get localStorage key for draft
+const getDraftKey = (templateId) => templateId ? `draft_${templateId}` : 'draft_new';
+
+// Clear all old drafts on app start
+const clearOldDrafts = () => {
+  const keys = Object.keys(localStorage);
+  keys.forEach(key => {
+    if (key.startsWith('draft_')) {
+      try {
+        const draft = JSON.parse(localStorage.getItem(key));
+        // Remove drafts older than 24 hours
+        if (Date.now() - draft.savedAt > 24 * 60 * 60 * 1000) {
+          localStorage.removeItem(key);
+        }
+      } catch {
+        localStorage.removeItem(key);
+      }
+    }
+  });
+};
+
 const Editor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { token } = useAuth();
+  const { token } = useAuth(); // Token is auto-added by axios interceptor
   const [templateName, setTemplateName] = useState(location.state?.templateName || 'Untitled Template');
   const [blocks, setBlocks] = useState([]);
   const [selectedBlock, setSelectedBlock] = useState(null);
@@ -25,31 +45,99 @@ const Editor = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
   const [isFavourite, setIsFavourite] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const loadTemplate = React.useCallback(async () => {
+  // Clear old drafts on mount
+  useEffect(() => {
+    clearOldDrafts();
+  }, []);
+
+  // Auto-save draft every 3 seconds when editing
+  useEffect(() => {
+    if (!isLoaded) return;
+    
+    const saveDraft = () => {
+      const draftKey = getDraftKey(id);
+      const draft = {
+        templateName,
+        blocks,
+        savedAt: Date.now()
+      };
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+    };
+
+    const timer = setTimeout(saveDraft, 3000);
+    return () => clearTimeout(timer);
+  }, [id, templateName, blocks, isLoaded]);
+
+  // Clear draft after successful save
+  const clearDraft = useCallback(() => {
+    const draftKey = getDraftKey(id);
+    localStorage.removeItem(draftKey);
+    localStorage.removeItem('draft_new');
+  }, [id]);
+
+  const loadTemplate = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/templates/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`/api/templates/${id}`);
+      
+      // Check for unsaved draft
+      const draftKey = getDraftKey(id);
+      const savedDraft = localStorage.getItem(draftKey);
+      
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          const serverTime = new Date(response.data.template.updatedAt).getTime();
+          
+          // If draft is newer than server version, restore it
+          if (draft.savedAt > serverTime) {
+            setTemplateName(draft.templateName);
+            setBlocks(draft.blocks);
+            setIsFavourite(response.data.template.isFavourite || false);
+            setIsLoaded(true);
+            return;
+          }
+        } catch (e) {
+          console.error('Failed to parse draft:', e);
+        }
+      }
+      
       setTemplateName(response.data.template.name);
       setBlocks(response.data.template.blocks || []);
       setIsFavourite(response.data.template.isFavourite || false);
-      toast.success('Template loaded successfully');
+      setIsLoaded(true);
     } catch (err) {
       toast.error('Failed to load template');
       navigate('/dashboard');
     }
-  }, [id, token, navigate]);
+  }, [id, navigate]);
 
   useEffect(() => {
     if (id) {
       loadTemplate();
     } else {
-      // Reset state when creating new template
+      // Check for draft when creating new template
+      const draftKey = 'draft_new';
+      const savedDraft = localStorage.getItem(draftKey);
+      
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          setTemplateName(draft.templateName);
+          setBlocks(draft.blocks);
+          setIsLoaded(true);
+          return;
+        } catch (e) {
+          console.error('Failed to parse draft:', e);
+        }
+      }
+      
       setTemplateName(location.state?.templateName || 'Untitled Template');
       setBlocks([]);
       setSelectedBlock(null);
       setIsFavourite(false);
+      setIsLoaded(true);
     }
   }, [id, loadTemplate, location.state?.templateName]);
 
@@ -60,9 +148,7 @@ const Editor = () => {
     }
 
     try {
-      await axios.patch(`/api/templates/${id}/favourite`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.patch(`/api/templates/${id}/favourite`, {});
       setIsFavourite(!isFavourite);
       toast.success(isFavourite ? 'Removed from favourites' : 'Added to favourites ❤️');
     } catch (err) {
@@ -81,17 +167,15 @@ const Editor = () => {
     setSaving(true);
     try {
       if (id) {
-        await axios.put(`/api/templates/${id}`, 
-          { name: templateName, blocks },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        // Update existing template
+        await axios.put(`/api/templates/${id}`, { name: templateName, blocks });
+        clearDraft(); // Clear draft after successful save
         toast.success('Template saved successfully! 💾');
       } else {
-        const response = await axios.post('/api/templates',
-          { name: templateName, blocks },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        // Create new template
+        const response = await axios.post('/api/templates', { name: templateName, blocks });
         const newTemplateId = response.data.template._id;
+        clearDraft(); // Clear the 'new' draft
         toast.success('Template created successfully! 🎉');
         // Navigate to edit mode with the new template ID
         navigate(`/editor/${newTemplateId}`, { replace: true });
@@ -119,7 +203,7 @@ const Editor = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-gray-50">
         <Navbar 
           showActions={true}
           onSave={handleSave}
@@ -131,12 +215,8 @@ const Editor = () => {
         />
 
         {/* Template Name Editor */}
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-xl p-4 mb-6"
-          >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 shadow-sm">
             {isEditingName ? (
               <input
                 type="text"
@@ -155,42 +235,30 @@ const Editor = () => {
                 {templateName}
               </h2>
             )}
-            <p className="text-sm text-gray-600 mt-1">
-              Click the title to rename • {blocks.length} blocks
+            <p className="text-sm text-gray-500 mt-1.5">
+              Click to rename • {blocks.length} {blocks.length === 1 ? 'block' : 'blocks'}
             </p>
-          </motion.div>
+          </div>
 
           {/* Editor Layout */}
-          <div className="grid grid-cols-12 gap-6">
+          <div className="grid grid-cols-12 gap-5">
             {/* Left Palette */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="col-span-12 lg:col-span-2"
-            >
+            <div className="col-span-12 lg:col-span-2">
               <Palette />
-            </motion.div>
+            </div>
 
             {/* Center Canvas */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="col-span-12 lg:col-span-7"
-            >
+            <div className="col-span-12 lg:col-span-7">
               <Canvas
                 blocks={blocks}
                 setBlocks={setBlocks}
                 selectedBlock={selectedBlock}
                 setSelectedBlock={setSelectedBlock}
               />
-            </motion.div>
+            </div>
 
             {/* Right Property Editor */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="col-span-12 lg:col-span-3"
-            >
+            <div className="col-span-12 lg:col-span-3">
               {selectedBlock ? (
                 <BlockEditor
                   block={selectedBlock}
@@ -201,19 +269,19 @@ const Editor = () => {
                   onClose={() => setSelectedBlock(null)}
                 />
               ) : (
-                <div className="glass rounded-xl p-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm sticky top-24">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">✨</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">
                     No Block Selected
                   </h3>
-                  <p className="text-sm text-gray-600">
-                    Click on a block in the canvas to edit its properties
+                  <p className="text-sm text-gray-500">
+                    Select a block from the canvas to customize its properties
                   </p>
                 </div>
               )}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

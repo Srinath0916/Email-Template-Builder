@@ -1,23 +1,16 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
-const Card = ({ children, className = '', hover = true, glass = false, ...props }) => {
-  const baseStyles = 'rounded-2xl transition-all duration-300';
-  const glassStyles = glass 
-    ? 'glass shadow-glass' 
-    : 'bg-white shadow-lg';
-  const hoverStyles = hover ? 'hover-lift cursor-pointer' : '';
+const Card = ({ children, className = '', hover = false, ...props }) => {
+  const baseStyles = 'bg-white rounded-lg border border-gray-200';
+  const hoverStyles = hover ? 'transition-shadow hover:shadow-md' : '';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={`${baseStyles} ${glassStyles} ${hoverStyles} ${className}`}
+    <div
+      className={`${baseStyles} ${hoverStyles} ${className}`}
       {...props}
     >
       {children}
-    </motion.div>
+    </div>
   );
 };
 

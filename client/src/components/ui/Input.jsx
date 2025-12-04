@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Input = ({ label, type = 'text', icon, ...props }) => {

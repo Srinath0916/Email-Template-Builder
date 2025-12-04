@@ -1,46 +1,86 @@
-import React from 'react';
 import { useDrop } from 'react-dnd';
-import { motion } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { FiMail } from 'react-icons/fi';
 import DraggableCanvasBlock from './DraggableCanvasBlock';
 
 const Canvas = ({ blocks, setBlocks, selectedBlock, setSelectedBlock }) => {
   const addBlock = (type) => {
-    console.log('Adding block:', type);
     const newBlock = {
       id: uuidv4(),
       type,
       content: getDefaultContent(type),
       src: type === 'image' ? 'https://via.placeholder.com/600x200' : '',
+      url: type === 'button' ? '#' : '',
       styles: {
-        color: '#000000',
+        color: type === 'button' ? '#ffffff' : '#000000',
         backgroundColor: type === 'button' ? '#0ea5e9' : 'transparent',
         fontSize: '16px',
-        textAlign: 'left'
-      }
+        textAlign: 'center'
+      },
+      childButton: null
     };
     setBlocks([...blocks, newBlock]);
   };
 
-  const [{ isOver, canDrop }, drop] = useDrop({
+  // Add a child button to a parent block (image or text)
+  const addChildButton = (parentId) => {
+    setBlocks(blocks.map(block => {
+      if (block.id === parentId && (block.type === 'image' || block.type === 'text')) {
+        return {
+          ...block,
+          childButton: {
+            id: uuidv4(),
+            content: 'Click Me',
+            url: '#',
+            styles: {
+              color: '#ffffff',
+              backgroundColor: '#0ea5e9',
+              fontSize: '16px'
+            }
+          }
+        };
+      }
+      return block;
+    }));
+  };
+
+  // Remove child button from a parent block
+  const removeChildButton = (parentId) => {
+    setBlocks(blocks.map(block => {
+      if (block.id === parentId) {
+        return { ...block, childButton: null };
+      }
+      return block;
+    }));
+  };
+
+  // Update block content (for inline editing)
+  const updateBlockContent = (blockId, newContent) => {
+    setBlocks(prevBlocks => prevBlocks.map(block => {
+      if (block.id === blockId) {
+        return { ...block, content: newContent };
+      }
+      return block;
+    }));
+  };
+
+  // Expose function globally for inline editing
+  window.updateBlockContent = updateBlockContent;
+
+  const [{ isOver }, drop] = useDrop({
     accept: 'BLOCK',
     drop: (item) => {
-      console.log('Dropped item:', item);
       addBlock(item.type);
       return { dropped: true };
     },
     collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
-      canDrop: !!monitor.canDrop()
+      isOver: !!monitor.isOver()
     })
   });
 
-  console.log('Canvas - isOver:', isOver, 'canDrop:', canDrop);
-
   const getDefaultContent = (type) => {
     switch (type) {
-      case 'text': return 'Enter your text here';
+      case 'text': return ''; // Empty so placeholder shows
       case 'button': return 'Click Me';
       case 'divider': return '';
       default: return '';
@@ -63,34 +103,30 @@ const Canvas = ({ blocks, setBlocks, selectedBlock, setSelectedBlock }) => {
   };
 
   return (
-    <div className="glass rounded-xl p-8 min-h-[600px]">
+    <div className="bg-white rounded-xl border border-gray-200 p-6 min-h-[600px] shadow-sm">
       <div
         ref={drop}
         className={`
-          bg-white rounded-xl shadow-inner min-h-[500px] p-6 transition-all
-          ${isOver ? 'ring-4 ring-primary-500 ring-opacity-50 bg-primary-50' : ''}
+          bg-gray-50 rounded-xl border-2 border-dashed min-h-[500px] p-5 transition-all
+          ${isOver ? 'border-primary-500 bg-primary-50/50 shadow-inner' : 'border-gray-300'}
         `}
       >
         {blocks.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center h-[400px] text-center"
-          >
-            <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center mb-6 shadow-xl">
-              <FiMail className="text-white" size={32} />
+          <div className="flex flex-col items-center justify-center h-[450px] text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-purple-100 rounded-2xl flex items-center justify-center mb-5">
+              <FiMail className="text-primary-600" size={32} />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2 font-display">
-              Start Building
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Start Building Your Template
             </h3>
-            <p className="text-gray-600 max-w-md">
-              Drag blocks from the left panel to start creating your email template
+            <p className="text-sm text-gray-500 max-w-sm mb-6">
+              Drag and drop blocks from the left panel to create your email template
             </p>
-            <div className="mt-6 flex items-center gap-2 text-sm text-gray-500">
-              <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
-              <span>Drag & Drop to add blocks</span>
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
+              <span>Drag & Drop Ready</span>
             </div>
-          </motion.div>
+          </div>
         ) : (
           <div className="space-y-4">
             {blocks.map((block, index) => (
@@ -102,6 +138,8 @@ const Canvas = ({ blocks, setBlocks, selectedBlock, setSelectedBlock }) => {
                 deleteBlock={deleteBlock}
                 isSelected={selectedBlock?.id === block.id}
                 onClick={() => setSelectedBlock(block)}
+                onAddChildButton={addChildButton}
+                onRemoveChildButton={removeChildButton}
               />
             ))}
           </div>

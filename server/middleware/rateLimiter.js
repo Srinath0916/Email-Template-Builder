@@ -13,18 +13,6 @@ const authLimiter = rateLimit({
 });
 
 /**
- * Rate limiter for forgot password endpoint
- * Prevents email spam
- */
-const forgotPasswordLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 requests per hour
-  message: 'Too many password reset attempts, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-/**
  * Rate limiter for refresh token endpoint
  * Prevents token abuse
  */
@@ -49,7 +37,6 @@ const apiLimiter = rateLimit({
 
 module.exports = {
   authLimiter,
-  forgotPasswordLimiter,
   refreshLimiter,
   apiLimiter
 };
